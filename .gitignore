@@ -1,4 +1,5 @@
 __pycache__/
-*.pyc
 .venv/
 scratch.py
+*.pyc
+text_file.txt
