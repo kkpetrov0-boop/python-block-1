@@ -12,7 +12,7 @@ class ClassTimer:
 
     def __enter__(self):
         if self._enter:
-            raise SyntaxError("Cannot insert class speciment into itself")
+            raise SyntaxError("Cannot insert class specimen into itself")
         global timerlevel
         timerlevel += 1
         self.start = time.perf_counter()
@@ -27,6 +27,17 @@ class ClassTimer:
         timerlevel -= 1
         
 @contextmanager
+def timer_2(block_marker):
+    try:
+        global timerlevel
+        timerlevel += 1
+        start = time.perf_counter()
+        yield
+
+    finally:
+        stop = time.perf_counter()
+        logger.info(f"{(timerlevel - 1) * "  "}{block_marker} time: {stop - start}")
+        timerlevel -= 1
 
 
 def main():
@@ -40,11 +51,17 @@ def main():
     logger.addHandler(handler)
 
     
-    with ClassTimer("test1") as some:
-        with ClassTimer("test2") as something:
-            print("a" * 3)
-    test = ClassTimer("test")
-    
+    with ClassTimer("Outer Class") as some:
+        with ClassTimer("Mid Class") as something:
+            with ClassTimer("Inner Class") as pppp:
+                print("This is inside Class")
+         #   raise TypeError
+
+    with timer_2("Outer contextmanager") as abc:
+        with timer_2("Mid contextmanager") as dbm:
+            with timer_2("Inner contextmanager") as inner:
+                #raise TypeError
+                print("This is inside context manager")
 
 
 if __name__ == "__main__":

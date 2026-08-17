@@ -1,5 +1,6 @@
 __pycache__/
 .venv/
+.idea/
 scratch.py
 *.pyc
 text_file.txt
