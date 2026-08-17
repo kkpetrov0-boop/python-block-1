@@ -8,35 +8,35 @@ logger = logging.getLogger(__name__)
 class ClassTimer:
     def __init__(self, block_marker: str):
         self.block_marker = block_marker
-        self._enter = False
+        self._entered = False
 
     def __enter__(self):
-        if self._enter:
-            raise SyntaxError("Cannot insert class specimen into itself")
+        if self._entered:
+            raise RuntimeError(f"Timer '{self.block_marker}' is already active")
         global timerlevel
         timerlevel += 1
         self.start = time.perf_counter()
-        self._enter = True
-        return self._enter
+        self._entered = True
+        return self
 
     def __exit__(self, exc_type, exc, tb):
-        self._enter = False
+        self._entered = False
         global timerlevel
-        self.stop = time.perf_counter()
-        logger.info(f"  " * (timerlevel - 1) + self.block_marker + f" time: {self.stop-self.start}")
+        stop = time.perf_counter()
+        logger.info(f"  " * (timerlevel - 1) + self.block_marker + f" time: {(stop-self.start):.6f}")
         timerlevel -= 1
         
 @contextmanager
 def timer_2(block_marker):
+    global timerlevel
+    timerlevel += 1
+    start = time.perf_counter()
     try:
-        global timerlevel
-        timerlevel += 1
-        start = time.perf_counter()
         yield
 
     finally:
         stop = time.perf_counter()
-        logger.info(f"{(timerlevel - 1) * "  "}{block_marker} time: {stop - start}")
+        logger.info(f"{(timerlevel - 1) * "  "}{block_marker} time: {(stop - start):.6f}")
         timerlevel -= 1
 
 
@@ -51,17 +51,23 @@ def main():
     logger.addHandler(handler)
 
     
-    with ClassTimer("Outer Class") as some:
-        with ClassTimer("Mid Class") as something:
-            with ClassTimer("Inner Class") as pppp:
+    with ClassTimer("Outer Class") as outer:
+        with ClassTimer("Mid Class") as mid:
+            with ClassTimer("Inner Class") as inner:
                 print("This is inside Class")
          #   raise TypeError
 
-    with timer_2("Outer contextmanager") as abc:
-        with timer_2("Mid contextmanager") as dbm:
+    with timer_2("Outer contextmanager") as outer:
+        with timer_2("Mid contextmanager") as mid:
             with timer_2("Inner contextmanager") as inner:
                 #raise TypeError
                 print("This is inside context manager")
+
+    with timer_2("Outer contextmanager") as outer:
+            with ClassTimer("Mid Class") as mid:
+                    #raise TypeError
+                    print("This is inside context manager/Class")
+    
 
 
 if __name__ == "__main__":
