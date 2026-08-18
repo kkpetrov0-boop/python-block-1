@@ -3,5 +3,5 @@ __pycache__/
 .idea/
 scratch.py
 *.pyc
-text_file.txt
+text_file.*
 Test.py
