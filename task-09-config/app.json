@@ -1,0 +1,12 @@
+{
+  "port": "COM3",
+  "baud": 9600,
+  "client_id": "fridge-01",
+  "broker": "mqtt.local",
+  "broker_port": 1884,
+  "buffer_max_bytes": 500000,
+  "buffer_keep_lines": 1000,
+  "reconnect_min": 2.0,
+  "reconnect_max": 120.0,
+  "log_level": "DEBUG"
+}
