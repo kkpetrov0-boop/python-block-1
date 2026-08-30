@@ -1,6 +1,7 @@
 import struct
 import math
-from frames import ChecksumError, MalformedFrameError, UnknownFrameTypeError, parse_frame, FrameType, Frame
+from frames import ChecksumError, MalformedFrameError, UnknownFrameTypeError, parse_frame, FrameType, Frame, Telemetry, Status, Command
+import pytest
 
 
 def build_frame(type_code, test_frame):
@@ -10,66 +11,58 @@ def build_frame(type_code, test_frame):
     frame = bytes([type_code]) + bytes([len(test_frame)]) + test_frame + bytes([calculated_checksum])
     return frame
 
-test_telemetry = struct.pack(">bBffBB", 1, 9, 25.4, 24.4, 1, 9)
-#print(repr(parse_frame(test_telemetry)))
-test1 = parse_frame(test_telemetry)
+def f32(num):
+    num = struct.pack(">f", num)
+    num = struct.unpack(">f", num)[0]
+    return num
 
-assert math.isclose(test1.temp, 25.4, rel_tol=1e-6), "Wrong temperature in telemetry"
-assert math.isclose(test1.setpoint, 24.4, rel_tol=1e-6), "Wrong setpoint in telemetry"
-assert test1.comp_state == 1, "Wrong compressor state in telemetry"
-
-payload = struct.pack(">ffB", 25.4, 24.4, 1)
-raw = build_frame(FrameType.TELEMETRY, payload)
-parsed = parse_frame(raw)
-
-assert math.isclose(parsed.temp, 25.4, rel_tol=1e-6), "Wrong temperature in telemetry(auto)"
-assert math.isclose(parsed.setpoint, 24.4, rel_tol=1e-6), "Wrong setpoint in telemetry(auto)"
-assert parsed.comp_state == 1, "Wrong compressor state in telemetry(auto)"
-
-payload = struct.pack(">f", 10.0)
-raw = build_frame(FrameType.COMMAND, payload)
-parsed = parse_frame(raw)
-assert math.isclose(parsed.setpoint, 10.0, rel_tol=1e-6), "Wrong setpoint in command"
-
-payload = struct.pack(">B", 1)
-raw = build_frame(FrameType.STATUS, payload)
-parsed = parse_frame(raw)
-assert parsed.status == 1, "Wrong status in status (on)"
-payload = struct.pack(">B", 0)
-raw = build_frame(FrameType.STATUS, payload)
-parsed = parse_frame(raw)
-assert parsed.status == 0, "Wrong status in status (off)"
-
-try:
-    test_telemetry = struct.pack(">bBffBB", 1, 9, 25.4, 24.4, 1, 8)
+def test_checksum():
+    test_telemetry = struct.pack(">bBffBB", 1, 9, 25.4, 24.4, 1, 9)
     test1 = parse_frame(test_telemetry)
-    assert False, "No checksum error"
-except ChecksumError as e:
-    pass
 
-try:
-    raw = build_frame(99, b"\x00" * 4)
+    assert math.isclose(test1.temp, 25.4, rel_tol=1e-6)
+    assert math.isclose(test1.setpoint, 24.4, rel_tol=1e-6)
+    assert test1.comp_state == 1
+
+
+@pytest.mark.parametrize("payload_exp,pack_args,type_code,result",[
+    (">ffB", [25.4, 24.4, 1], FrameType.TELEMETRY, Telemetry(temp=f32(25.4), setpoint=f32(24.4), comp_state=1)),
+    (">f", [10.0], FrameType.COMMAND, Command(setpoint=10.0)),
+    (">B", [1], FrameType.STATUS, Status(status=1)),
+    (">B", [0], FrameType.STATUS, Status(status=0))
+])
+def test_parsing(payload_exp,pack_args,type_code,result):
+    payload = struct.pack(payload_exp, *pack_args)
+    raw = build_frame(type_code, payload)
     parsed = parse_frame(raw)
-    assert False, "No UnknownFrameTypeError"
-except UnknownFrameTypeError as e:
-    pass
 
-try:
-    raw = build_frame(1, b"\x00" * 4)
-    parse_frame(raw)
-    assert False, "No MalformedFrameError"
-except MalformedFrameError as e:
-    pass
+    assert parsed == result
 
-try:
-    raw = build_frame(FrameType.TELEMETRY, b"\x00" * 5)
-    parse_frame(raw)
-    assert False, "No MalformedFrameError on short payload"
-except MalformedFrameError as e:
-    pass
 
-try:
-    Frame()
-    assert False, "Class Frame() is instantiatable"
-except TypeError as e:
-    pass
+def test_checksum_error():
+    with pytest.raises(ChecksumError, match="Wrong checksum: received"):
+        test_telemetry = struct.pack(">bBffBB", 1, 9, 25.4, 24.4, 1, 8)
+        parse_frame(test_telemetry)
+
+
+def test_unknown_frame_type_error():
+    with pytest.raises(UnknownFrameTypeError, match="Received unknown type:"):
+        raw = build_frame(99, b"\x00" * 4)
+        parse_frame(raw)
+
+
+def test_malformed_frame_error():
+    with pytest.raises(MalformedFrameError, match="Wrong length:"):
+        raw = build_frame(1, b"\x00" * 4)
+        parse_frame(raw)
+
+
+def test_short_payload():
+    with pytest.raises(MalformedFrameError, match="Wrong length"):
+        raw = build_frame(FrameType.TELEMETRY, b"\x00" * 5)
+        parse_frame(raw)
+
+
+def test_type_error():
+    with pytest.raises(TypeError, match="Frame"):
+        Frame()
