@@ -5,3 +5,4 @@ scratch.py
 *.pyc
 text_file.*
 Test.py
+.coverage

@@ -6,12 +6,12 @@ from pathlib import Path
 from dataclasses import dataclass
 import socket
 from enum import StrEnum
+import sys 
 
 @dataclass
 class Resolved:
     value: ...
     source: str
-
 
 @dataclass
 class FieldSpec:
@@ -19,7 +19,6 @@ class FieldSpec:
     type_func: ...
     default: ...
     validator: ...
-
 
 class LogLevel(StrEnum):
     DEBUG = "DEBUG"
@@ -35,12 +34,11 @@ def in_range(low, high):
         return None
     return check
 
+
 def is_exist(path):
     if path.exists():
         return None
-    return "Path doesn't exist"
-
-
+    return r"Path doesn't exist"
 
 
 FIELDS = [
@@ -78,7 +76,7 @@ class ConfigValidationError(ConfigError):
 
 def cmd_parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="config")
-    parser.add_argument("--config", help="Takes argument for config (highest priority)")
+    parser.add_argument("--config", help="Config file (.ini or .json)")
     parser.add_argument("--port", help="USB port for ESP32", default=None)
     parser.add_argument("--baud", help="BAUD for UART", default=None)
     parser.add_argument("--client-id", help="CLIENT ID for MQTT broker", default=None)
@@ -98,11 +96,13 @@ def cmd_parse() -> argparse.Namespace:
     parser.add_argument("--explain", help="Show source for every config name", action="store_true")
     args = parser.parse_args()
     return args
+
  
 def read_json(path):
     with open(path, "r") as file:
         json_dict = json.load(file)
     return json_dict
+
 
 def read_ini(path):
     parser = configparser.ConfigParser()
@@ -112,6 +112,7 @@ def read_ini(path):
         for k, v in parser[i].items():
             ini_dict[k] = v
     return ini_dict
+
 
 def read_env():
     env_dict = {}
@@ -139,7 +140,7 @@ def read_file(path):
             try:
                 file_dict = read_json(path)
             except json.JSONDecodeError as e:
-                raise ConfigFileError(f"Unvalid json: {e}, {e.lineno=}")
+                raise ConfigFileError(f"Invalid json: {e}, {e.lineno=}")
         elif path.suffix == ".ini":
             try:
                 file_dict = read_ini(path)
@@ -203,6 +204,7 @@ def assemble(cli_dict, env_dict, file_dict):
         except ConfigValidationError as e:
             errors.append(str(e))
 
+    
     return complete_dict, errors
 
 
@@ -218,18 +220,24 @@ def main():
         file_dict = {}
     else:
         path = Path(conf)
-        file_dict = read_file(path)
+        try:
+            file_dict = read_file(path)
+        except ConfigFileError as e:
+            print(e, file=sys.stderr)
+            sys.exit(2)
         
-
     complete_dict, errors = assemble(cli_dict, env_dict, file_dict)
-
     if errors:
-        raise ConfigError(errors)
-            
+        for error in errors:
+            print(error, file=sys.stderr)
+        sys.exit(2)
+        
+    
     if args.explain:
         for k, v in complete_dict.items():
             print(f"Value {k} was taken from {v.source}")
-
+    sys.exit(0)
+        
     
 if __name__ == "__main__":
     main()

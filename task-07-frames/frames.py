@@ -89,7 +89,7 @@ def parse_frame(raw):
     frame_type = raw[0]
     length = raw[1]
     if not length == (len(raw) - 3):
-        raise MalformedFrameError(f"Wrong length: received={length} calculated={len(raw) -3}")
+        raise MalformedFrameError(f"Wrong length: received={length} calculated={len(raw) - 3}")
     received_checksum = raw[-1]
     calculated_checksum = 0
     for n in raw[2:-1]:

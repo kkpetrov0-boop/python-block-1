@@ -1,0 +1,21 @@
+[tool.pytest.ini_options]
+pythonpath = [
+    "task-01-ringbuffer",
+    "task-04-retry",
+    "task-05-sensorstats",
+    "task-06-minigrep",
+    "task-07-frames",
+    "task-08-log-rotator",
+    "task-09-config"
+]
+addopts = "--cov=. --cov-report=term-missing"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+]
+
+[tool.coverage.run]
+omit = [
+    "task-10-pytest/*",
+    "*_test.py",
+    "*/test_*.py",
+]

@@ -15,7 +15,6 @@ class Action:
     destination: Path | None = None
 
 
-
 def cmd_parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="log_rotator")
     parser.add_argument("--dir", help="Takes this address for log search")

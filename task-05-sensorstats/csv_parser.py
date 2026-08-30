@@ -33,7 +33,6 @@ def parse_csv(filename: str) -> tuple[defaultdict, Counter]:
                 continue        
                 #groups[k].append(v)
             
-
             line["sensor_id"] = int(line["sensor_id"])    
             groups[line["sensor_id"]].append({"timestamp": line["timestamp"], "value": line["value"]})
         
