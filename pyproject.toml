@@ -1,11 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "log-utilities"
+version = "0.1.0"
+description = "Utilities for log managing"
+requires-python = ">=3.12"
+dependencies = []
+readme = "README.md"
+
+[project.scripts]
+minigrep = "log_utilities.minigrep:main"
+logrotate = "log_utilities.log_rotator:main"
+sensor-stats = "log_utilities.csv_parser:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0"
+]
+
 [tool.pytest.ini_options]
 pythonpath = [
     "task-01-ringbuffer",
     "task-04-retry",
-    "task-05-sensorstats",
-    "task-06-minigrep",
     "task-07-frames",
-    "task-08-log-rotator",
     "task-09-config"
 ]
 addopts = "--cov=. --cov-report=term-missing"

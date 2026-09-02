@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import gzip
 import shutil
 import os
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,8 +18,8 @@ class Action:
 
 def cmd_parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="log_rotator")
-    parser.add_argument("--dir", help="Takes this address for log search")
-    parser.add_argument("--size-mb", help="Takes only logs, that exceeds the size", type=int)
+    parser.add_argument("dir", help="Takes this address for log search")
+    parser.add_argument("--size-mb", help="Takes only logs, that exceeds the size", default=0, type=int)
     parser.add_argument("--keep", help="Keep only n last logs for each name", nargs="?", default=5, type=int)
     parser.add_argument("--dry-run", help="Show the list of steps, but do not change any file", action="store_true")
     args = parser.parse_args()
@@ -74,7 +75,7 @@ def exec_plan(plan, location, copy_func=shutil.copyfileobj):
     
 def main():
     args = cmd_parse()
-    plan = create_plan(args.dir, args.keep, args.size_mb) 
+    plan = create_plan(args.dir, args.keep, args.size_mb)
     if args.dry_run:
         for action in plan:
             if action.kind == "archive":
@@ -83,6 +84,7 @@ def main():
                 print(f"Delete {action.source}")
     else:
         exec_plan(plan, args.dir)
+    sys.exit(0)
         
 if __name__ == "__main__":
     main()

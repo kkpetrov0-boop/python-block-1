@@ -1,4 +1,4 @@
-from minigrep import search_in_text, process, main
+from log_utilities.minigrep import search_in_text, process, main
 import re
 import subprocess, sys
 import pytest
@@ -18,10 +18,9 @@ def test_search_in_text(regexp, ignorecase, lines, invert, result):
 
 @pytest.fixture
 def run_minigrep(tmp_path):
-    script = Path(__file__).parent/ "minigrep.py"
     def run(*args, **kwargs):
         return subprocess.run(
-            [sys.executable, str(script), *args],
+            [sys.executable, "-m", "log_utilities.minigrep", *args],
             capture_output=True, text=True, cwd=tmp_path, **kwargs
         )
     return run

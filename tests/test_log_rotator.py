@@ -1,4 +1,4 @@
-from log_rotator import create_plan, exec_plan
+from log_utilities.log_rotator import create_plan, exec_plan
 import tempfile
 from pathlib import Path
 import pytest

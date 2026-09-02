@@ -1,5 +1,5 @@
-from csv_parser import parse_csv
-from csv_parser import count_stat
+from log_utilities.csv_parser import parse_csv
+from log_utilities.csv_parser import count_stat
 from text_file_maker import make_file
 import math
 import time
