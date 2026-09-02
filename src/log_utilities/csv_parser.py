@@ -3,6 +3,13 @@ import statistics
 import sys
 from collections import defaultdict
 from collections import Counter
+import argparse
+
+def parse_cmd():
+    parser = argparse.ArgumentParser(prog="sensor-stats")
+    parser.add_argument("file", help="file for log parsing")
+    args = parser.parse_args()
+    return args
 
 def parse_csv(filename: str) -> tuple[defaultdict, Counter]:
     empty_val_flag = False
@@ -70,7 +77,9 @@ def count_stat(groups: dict):
     return result
 
 def main():
-    groups, errors = parse_csv("text_file.csv")
+    args = parse_cmd()
+    groups, errors = parse_csv(args.file)
+
     groups = dict(sorted(groups.items()))
     result = count_stat(groups)
     for row in result:
@@ -78,9 +87,8 @@ def main():
             print(f"sensor_id = {row["sensor_id"]}  " + "-" * 77)
             continue
         print(f"sensor_id = {row["sensor_id"]}\tmin = {row["min"]:.3f}\tmax = {row["max"]:.3f}\tmean = {row["mean"]:.3f}\tmedian = {row["median"]:.3f}\tstdev = {row["stdev"]:.3f}")
-
-
     print(errors, file=sys.stderr)
+    sys.exit(0)
         
 
 
