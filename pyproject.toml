@@ -14,6 +14,7 @@ readme = "README.md"
 minigrep = "log_utilities.minigrep:main"
 logrotate = "log_utilities.log_rotator:main"
 sensor-stats = "log_utilities.csv_parser:main"
+logtail = "log_utilities.logtail:main"
 
 [project.optional-dependencies]
 dev = [
